@@ -1,0 +1,31 @@
+services:
+
+  postgres-identity:
+    image: postgres:17
+    container_name: flowops-postgres-identity
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: identity_db
+      POSTGRES_USER: flowops
+      POSTGRES_PASSWORD: flowops_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - identity_postgres_data:/var/lib/postgresql/data
+
+  postgres-ticket:
+    image: postgres:17
+    container_name: flowops-postgres-ticket
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ticket_db
+      POSTGRES_USER: flowops
+      POSTGRES_PASSWORD: flowops_password
+    ports:
+      - "5434:5432"
+    volumes:
+      - ticket_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  identity_postgres_data:
+  ticket_postgres_data:

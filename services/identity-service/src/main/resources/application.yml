@@ -7,8 +7,8 @@ spring:
 
   datasource:
     url: jdbc:postgresql://localhost:5433/identity_db
-    username: flowops
-    password: flowops_password
+    username: ${DB_USERNAME:flowops}
+    password: ${DB_PASSWORD:12345678}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -21,3 +21,9 @@ spring:
         format_sql: true
         jdbc:
           time_zone: UTC
+
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+    access-token-expiration: 3600000
+    refresh-token-expiration: 604800000

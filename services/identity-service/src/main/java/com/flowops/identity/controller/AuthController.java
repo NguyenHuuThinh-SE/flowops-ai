@@ -1,6 +1,8 @@
 package com.flowops.identity.controller;
 
+import com.flowops.identity.dto.auth.LogoutRequest;
 import com.flowops.identity.dto.auth.request.LoginRequest;
+import com.flowops.identity.dto.auth.request.RefreshTokenRequest;
 import com.flowops.identity.dto.auth.request.RegisterRequest;
 import com.flowops.identity.dto.auth.response.AuthResponse;
 import com.flowops.identity.service.AuthService;
@@ -26,4 +28,21 @@ public class AuthController {
     public AuthResponse login(@Valid @RequestBody LoginRequest request) {
         return authService.login(request);
     }
+
+    @PostMapping("/refresh")
+    public AuthResponse refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return authService.refresh(
+                request.refreshToken()
+        );
+    }
+
+    @PostMapping("/logout")
+    public void logout(
+            @Valid @RequestBody LogoutRequest request
+    ) {
+        authService.logout(
+                request.refreshToken()
+        );
+    }
+
 }

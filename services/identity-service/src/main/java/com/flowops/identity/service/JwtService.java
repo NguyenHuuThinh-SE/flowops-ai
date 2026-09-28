@@ -27,17 +27,32 @@ public class JwtService {
     }
 
     public String generateAccessToken(User user) {
-        Map<String, String> claims = new HashMap<>();
 
-        claims.put("roles", user.getRoles().stream().map(role -> role.getName()).collect(Collectors.toSet()).toString());
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(
+                "roles",
+                user.getRoles()
+                        .stream()
+                        .map(role -> role.getName())
+                        .collect(Collectors.toSet())
+        );
 
-        claims.put("userId", user.getId().toString());
+        claims.put(
+                "userId",
+                user.getId().toString()
+        );
 
         Date now = new Date();
 
-        Date expiration = new Date(now.getTime() + jwtProperties.getAccessTokenExpiration());
+        Date expiration =
+                new Date(
+                        now.getTime()
+                                + jwtProperties
+                                .getAccessTokenExpiration()
+                );
 
-        return Jwts.builder().claims(claims)
+        return Jwts.builder()
+                .claims(claims)
                 .subject(user.getUsername())
                 .issuedAt(now)
                 .expiration(expiration)
@@ -48,7 +63,13 @@ public class JwtService {
     public String generateRefreshToken(User user) {
         Date now = new Date();
 
-        Date expiration = new Date(now.getTime() + jwtProperties.getRefreshTokenExpiration());
+        Date expiration =
+                new Date(
+                        now.getTime()
+                                + jwtProperties
+                                .getRefreshTokenExpiration()
+                );
+
         return Jwts.builder()
                 .subject(user.getUsername())
                 .issuedAt(now)
@@ -58,7 +79,9 @@ public class JwtService {
     }
 
     public String extractUsername(String token) {
-        return parseClaims(token).getSubject();
+
+        return parseClaims(token)
+                .getSubject();
     }
 
     public boolean isTokenValid(String token) {
@@ -71,7 +94,10 @@ public class JwtService {
     }
 
     private Claims parseClaims(String token) {
-        return Jwts.parser().verifyWith(getSigningKey())
-                .build().parseSignedClaims(token).getPayload();
+        return Jwts.parser()
+                .verifyWith(getSigningKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }

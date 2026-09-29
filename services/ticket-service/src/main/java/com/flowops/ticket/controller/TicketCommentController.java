@@ -3,6 +3,7 @@ package com.flowops.ticket.controller;
 import com.flowops.ticket.Service.TicketCommentService;
 import com.flowops.ticket.dto.request.AddcommentRequest;
 import com.flowops.ticket.entity.TicketComment;
+import com.flowops.ticket.security.CurrentUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -15,15 +16,15 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TicketCommentController {
     private final TicketCommentService commentService;
+    private final CurrentUser currentUser;
 
     @PostMapping
     public TicketComment addComment(@PathVariable UUID ticketId,
                                     @Valid @RequestBody AddcommentRequest request) {
         // Temporary actor.
         // Will be replaced by JWT SecurityContext.
-        UUID authorId = UUID.randomUUID();
 
-        return commentService.addComment(ticketId, request, authorId);
+        return commentService.addComment(ticketId, request, currentUser.getUserId());
     }
 
     @GetMapping

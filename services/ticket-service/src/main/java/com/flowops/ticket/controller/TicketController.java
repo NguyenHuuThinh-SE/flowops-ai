@@ -8,11 +8,14 @@ import com.flowops.ticket.dto.response.TicketResponse;
 import com.flowops.ticket.entity.Ticket;
 import com.flowops.ticket.enums.TicketStatus;
 import com.flowops.ticket.repository.TicketRepository;
+import com.flowops.ticket.security.CurrentUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,100 +25,112 @@ import java.util.UUID;
 public class TicketController {
     private final TicketRepository ticketRepository;
     private final TicketService ticketService;
+    private final CurrentUser currentUser;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("""
+               hasAnyRole('EMPLOYEE',
+                           'IT_AGENT',
+                           'MANAGER',
+                           'ADMIN')
+            """)
     public TicketResponse createTicket(@Valid @RequestBody CreateTicketRequest request) {
         // Tạm thời lấy UUID test.
         // Sau khi kết nối JWT Security sẽ lấy từ SecurityContext.
-        UUID reporterId = UUID.randomUUID();
 
-        return ticketService.createTicket(request, reporterId);
+        return ticketService.createTicket(request, currentUser.getUserId());
     }
 
     @PostMapping("/{id}/assign")
+    @PreAuthorize("""
+                hasAnyRole('IT_AGENT', 'ADMIN')
+            """)
     public TicketResponse assignTicket(
             @PathVariable UUID id,
             @Valid @RequestBody AssignTicketRequest request
     ) {
 
-        UUID actorId = UUID.randomUUID();
-
         return ticketService.assignTicket(
                 id,
                 request.getAssigneeId(),
-                actorId
+                currentUser.getUserId()
         );
     }
 
     @PostMapping("/{id}/start")
+    @PreAuthorize("""
+                hasAnyRole('IT_AGENT', 'ADMIN')
+            """)
     public TicketResponse startTicket(
             @PathVariable UUID id
     ) {
 
-        UUID actorId = UUID.randomUUID();
-
         return ticketService.startTicket(
                 id,
-                actorId
+                currentUser.getUserId()
         );
     }
 
     @PostMapping("/{id}/wait")
+    @PreAuthorize("""
+                hasAnyRole('IT_AGENT', 'ADMIN')
+            """)
     public TicketResponse waitTicket(
             @PathVariable UUID id
     ) {
 
-        UUID actorId = UUID.randomUUID();
-
         return ticketService.waitTicket(
                 id,
-                actorId
+                currentUser.getUserId()
         );
     }
 
     @PostMapping("/{id}/resolve")
+    @PreAuthorize("""
+                hasAnyRole('IT_AGENT', 'ADMIN')
+            """)
     public TicketResponse resolveTicket(
             @PathVariable UUID id
-    ) {
-
-        UUID actorId = UUID.randomUUID();
+    ) throws AccessDeniedException {
 
         return ticketService.resolveTicket(
                 id,
-                actorId
+                currentUser.getUserId()
         );
     }
 
 
     @PostMapping("/{id}/close")
+    @PreAuthorize("""
+                hasAnyRole('IT_AGENT', 'MANAGER', 'ADMIN')
+            """)
     public TicketResponse closeTicket(
             @PathVariable UUID id
     ) {
 
-        UUID actorId = UUID.randomUUID();
-
         return ticketService.closeTicket(
                 id,
-                actorId
+                currentUser.getUserId()
         );
     }
 
+    @PreAuthorize("""
+                hasAnyRole('IT_AGENT', 'MANAGER', 'ADMIN')
+            """)
     @PostMapping("/{id}/reopen")
     public TicketResponse reopenTicket(
             @PathVariable UUID id
     ) {
 
-        UUID actorId = UUID.randomUUID();
-
         return ticketService.reopenTicket(
                 id,
-                actorId
+                currentUser.getUserId()
         );
     }
 
     @GetMapping("/{id}")
-    public TicketResponse getTicket(@PathVariable UUID id) {
+    public TicketResponse getTicket(@PathVariable UUID id) throws AccessDeniedException {
         return ticketService.getTickets(id);
     }
 

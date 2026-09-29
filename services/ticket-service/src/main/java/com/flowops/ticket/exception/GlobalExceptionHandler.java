@@ -89,4 +89,17 @@ public class GlobalExceptionHandler {
                 .status(status)
                 .body(body);
     }
+
+    @ExceptionHandler(
+            org.springframework.security.access.AccessDeniedException.class
+    )
+    public ResponseEntity<?> handleAccessDenied(
+            org.springframework.security.access.AccessDeniedException ex
+    ) {
+
+        return buildResponse(
+                HttpStatus.FORBIDDEN,
+                ex.getMessage()
+        );
+    }
 }

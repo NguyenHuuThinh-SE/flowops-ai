@@ -1,6 +1,5 @@
 package com.flowops.ticket.Service;
 
-import com.flowops.ticket.config.SecurityConfig;
 import com.flowops.ticket.dto.request.CreateTicketRequest;
 import com.flowops.ticket.dto.response.PageResponse;
 import com.flowops.ticket.dto.response.TicketResponse;
@@ -13,16 +12,16 @@ import com.flowops.ticket.exception.InvalidTicketStateException;
 import com.flowops.ticket.exception.ResourceNotFoundException;
 import com.flowops.ticket.repository.TicketHistoryRepository;
 import com.flowops.ticket.repository.TicketRepository;
+import com.flowops.ticket.security.TicketAuthorizationService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -31,6 +30,7 @@ import java.util.UUID;
 public class TicketService {
     private final TicketRepository ticketRepository;
     private final TicketHistoryRepository historyRepository;
+    private final TicketAuthorizationService authorizationService;
 
     @Transactional
     public TicketResponse createTicket(CreateTicketRequest request, UUID reporterId) {
@@ -151,9 +151,13 @@ public class TicketService {
     public TicketResponse resolveTicket(
             UUID ticketId,
             UUID actorId
-    ) {
+    ) throws AccessDeniedException {
 
         Ticket ticket = getTicketById(ticketId);
+
+        if (!authorizationService.canModify(ticket))
+            throw new AccessDeniedException("You are not assigned to this ticket");
+
 
         validateTransition(
                 ticket.getStatus(),
@@ -276,8 +280,12 @@ public class TicketService {
     }
 
     // Lấy 1 Ticket
-    public TicketResponse getTickets(UUID ticketId) {
+    public TicketResponse getTickets(UUID ticketId) throws AccessDeniedException {
         Ticket ticket = getTicketById(ticketId);
+
+        if (!authorizationService.canView(ticket)) {
+            throw new AccessDeniedException("You do not have permission to view this ticket");
+        }
         return TicketResponse.from(ticket);
     }
 

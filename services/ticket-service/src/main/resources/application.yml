@@ -8,7 +8,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5434/ticket_db
     username: flowops
-    password: flowops_password
+    password: 12345678
     driver-class-name: org.postgresql.Driver
 
   jpa:

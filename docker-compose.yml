@@ -1,31 +1,137 @@
 services:
 
+  # =====================================================
+  # PostgreSQL - Identity
+  # =====================================================
   postgres-identity:
     image: postgres:17
     container_name: flowops-postgres-identity
     restart: unless-stopped
+
     environment:
       POSTGRES_DB: identity_db
       POSTGRES_USER: flowops
       POSTGRES_PASSWORD: 12345678
+
     ports:
       - "5433:5432"
+
     volumes:
       - identity_postgres_data:/var/lib/postgresql/data
 
+    networks:
+      - flowops-network
+
+
+  # =====================================================
+  # PostgreSQL - Ticket
+  # =====================================================
   postgres-ticket:
     image: postgres:17
     container_name: flowops-postgres-ticket
     restart: unless-stopped
+
     environment:
       POSTGRES_DB: ticket_db
       POSTGRES_USER: flowops
       POSTGRES_PASSWORD: 12345678
+
     ports:
       - "5434:5432"
+
     volumes:
       - ticket_postgres_data:/var/lib/postgresql/data
 
+    networks:
+      - flowops-network
+
+
+  # =====================================================
+  # Identity Service
+  # =====================================================
+  identity-service:
+    build:
+      context: ./services/identity-service
+      dockerfile: Dockerfile
+
+    container_name: flowops-identity-service
+    restart: unless-stopped
+
+    ports:
+      - "8081:8081"
+
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+
+    depends_on:
+      - postgres-identity
+
+    networks:
+      - flowops-network
+
+
+  # =====================================================
+  # Ticket Service
+  # =====================================================
+  ticket-service:
+    build:
+      context: ./services/ticket-service
+      dockerfile: Dockerfile
+
+    container_name: flowops-ticket-service
+    restart: unless-stopped
+
+    ports:
+      - "8082:8082"
+
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+
+    depends_on:
+      - postgres-ticket
+
+    networks:
+      - flowops-network
+
+
+  # =====================================================
+  # API Gateway
+  # =====================================================
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+
+    container_name: flowops-api-gateway
+    restart: unless-stopped
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+
+    depends_on:
+      - identity-service
+      - ticket-service
+
+    networks:
+      - flowops-network
+
+
+# =====================================================
+# Volumes
+# =====================================================
 volumes:
+
   identity_postgres_data:
   ticket_postgres_data:
+
+
+# =====================================================
+# Network
+# =====================================================
+networks:
+
+  flowops-network:
+    driver: bridge
